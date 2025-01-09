@@ -7,6 +7,7 @@ export class AgoraManager {
         this.localVideoTrack = null;
         this.screenTrack = null;
         this.remoteUsers = new Map();
+        this.userName = '';
 
         // Agora 配置
         this.appId = 'e20eed62fec44c37a7dbeca6fbd4da22';
@@ -47,8 +48,9 @@ export class AgoraManager {
         }
     }
 
-    async joinChannel(channelId, uid) {
+    async joinChannel(channelId, uid, userName) {
         try {
+            this.userName = userName;
             // 加入频道
             await this.client.join(this.appId, channelId, this.token, uid || null);
             console.log("[Agora] 成功加入频道");
@@ -65,6 +67,7 @@ export class AgoraManager {
             const localContainer = document.createElement("div");
             localContainer.id = "local-player";
             localContainer.className = "video-container";
+            localContainer.setAttribute('data-user-name', this.userName); // 添加用户名属性
             document.getElementById("videoGrid").append(localContainer);
 
             // 创建视频元素容器
@@ -125,6 +128,8 @@ export class AgoraManager {
                     remoteContainer = document.createElement("div");
                     remoteContainer.id = `remote-player-${user.uid}`;
                     remoteContainer.className = "video-container";
+                    // 使用用户的 uid 作为显示名称，实际应用中可能需要通过信令服务器传递真实用户名
+                    remoteContainer.setAttribute('data-user-name', `用户 ${user.uid}`);
                     document.getElementById("videoGrid").append(remoteContainer);
 
                     // 创建视频元素容器
@@ -185,38 +190,46 @@ export class AgoraManager {
     }
 
     async toggleAudio() {
-        if (this.localAudioTrack) {
-            if (this.localAudioTrack.enabled) {
-                this.localAudioTrack.setEnabled(false);
-                console.log("[Agora] 音频已禁用");
+        console.log('[Agora] 尝试切换音频状态');
+        try {
+            if (!this.localAudioTrack) {
+                console.warn('[Agora] 音频轨道未初始化');
                 return false;
-            } else {
-                this.localAudioTrack.setEnabled(true);
-                console.log("[Agora] 音频已启用");
-                return true;
             }
+
+            const enabled = !this.localAudioTrack.enabled;
+            await this.localAudioTrack.setEnabled(enabled);
+            console.log(`[Agora] 音频已${enabled ? '启用' : '禁用'}`);
+            return enabled;
+        } catch (error) {
+            console.error('[Agora] 切换音频状态失败:', error);
+            return false;
         }
-        return false;
     }
 
     async toggleVideo() {
-        if (this.localVideoTrack) {
-            if (this.localVideoTrack.enabled) {
-                this.localVideoTrack.setEnabled(false);
-                console.log("[Agora] 视频已禁用");
+        console.log('[Agora] 尝试切换视频状态');
+        try {
+            if (!this.localVideoTrack) {
+                console.warn('[Agora] 视频轨道未初始化');
                 return false;
-            } else {
-                this.localVideoTrack.setEnabled(true);
-                console.log("[Agora] 视频已启用");
-                return true;
             }
+
+            const enabled = !this.localVideoTrack.enabled;
+            await this.localVideoTrack.setEnabled(enabled);
+            console.log(`[Agora] 视频已${enabled ? '启用' : '禁用'}`);
+            return enabled;
+        } catch (error) {
+            console.error('[Agora] 切换视频状态失败:', error);
+            return false;
         }
-        return false;
     }
 
     async toggleScreenShare() {
+        console.log('[Agora] 尝试切换屏幕共享状态');
         try {
             if (this.screenTrack) {
+                console.log('[Agora] 正在停止屏幕共享');
                 // 停止屏幕共享
                 await this.client.unpublish(this.screenTrack);
                 this.screenTrack.stop();
@@ -225,26 +238,52 @@ export class AgoraManager {
 
                 // 重新发布视频轨道
                 if (this.localVideoTrack) {
+                    console.log('[Agora] 重新发布视频轨道');
                     await this.client.publish(this.localVideoTrack);
+                    // 重新显示本地视频
+                    const localContainer = document.getElementById('local-player');
+                    if (localContainer) {
+                        const videoContainer = localContainer.querySelector('div');
+                        this.localVideoTrack.play(videoContainer);
+                    }
                 }
                 console.log("[Agora] 屏幕共享已停止");
                 return false;
             } else {
-                // 创建屏幕共享轨道
-                this.screenTrack = await AgoraRTC.createScreenVideoTrack();
+                console.log('[Agora] 正在启动屏幕共享');
+                try {
+                    // 创建屏幕共享轨道
+                    this.screenTrack = await AgoraRTC.createScreenVideoTrack();
+                } catch (error) {
+                    console.error('[Agora] 创建屏幕共享轨道失败:', error);
+                    if (error.message === 'Permission denied') {
+                        alert('获取屏幕共享权限被拒绝');
+                    }
+                    return false;
+                }
 
                 // 取消发布视频轨道
                 if (this.localVideoTrack) {
+                    console.log('[Agora] 取消发布原视频轨道');
                     await this.client.unpublish(this.localVideoTrack);
                 }
 
                 // 发布屏幕共享轨道
+                console.log('[Agora] 发布屏幕共享轨道');
                 await this.client.publish(this.screenTrack);
-                this.screenTrack.play("videoGrid");
+                
+                // 在本地视频容器中播放屏幕共享
+                const localContainer = document.getElementById('local-player');
+                if (localContainer) {
+                    const videoContainer = localContainer.querySelector('div');
+                    this.screenTrack.play(videoContainer);
+                }
+                
                 console.log("[Agora] 屏幕共享已开始");
 
                 // 监听屏幕共享结束
                 this.screenTrack.on("track-ended", async () => {
+                    console.log('[Agora] 检测到屏幕共享已结束');
                     await this.toggleScreenShare();
                 });
 
