@@ -10,6 +10,8 @@ export class AgoraManager {
         this.userName = '';
 
         // Agora 配置
+        // 在 Agora 控制台中创建应用，并获取 appId 和 token
+        // 这里是整的本地的临时的token
         this.appId = 'e20eed62fec44c37a7dbeca6fbd4da22';
         this.token = '007eJxTYGDlqXv8cMs57zOnZsWd9ZDLWPw4dlHBbz9FD0XrjxNFPhxQYEg1MkhNTTEzSktNNjFJNjZPNE9JSk1ONEtLSjFJSTQyOvmwPr0hkJFh/dMXDIxQCOKzMRgaGZuYmjEwAABFQyLI';
         this.channelParameters = {

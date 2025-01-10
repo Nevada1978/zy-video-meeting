@@ -24,8 +24,32 @@
         </div>
 
         <div class="meeting-container" id="meetingPage" style="display: none;">
-            <div id="videoGrid" class="video-grid"></div>
+            <div class="main-content">
+                <div id="videoGrid" class="video-grid"></div>
+                <div class="control-bar">
+                    <div class="participant-info">
+                        <span id="participantCount">参与者: 1</span>
+                    </div>
+                    <div class="control-buttons">
+                        <button class="control-btn" id="toggleAudio" title="麦克风">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button class="control-btn" id="toggleVideo" title="摄像头">
+                            <i class="fas fa-video"></i>
+                        </button>
+                        <button class="control-btn" id="toggleScreen" title="屏幕共享">
+                            <i class="fas fa-desktop"></i>
+                        </button>
+                        <button class="control-btn leave" id="leaveButton" title="离开会议">
+                            <i class="fas fa-phone-slash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div class="chat-container">
+                <div class="chat-header">
+                    <h3>聊天室</h3>
+                </div>
                 <div class="chat-messages" id="chatMessages">
                     <!-- 消息将在这里动态添加 -->
                 </div>
@@ -34,31 +58,12 @@
                 </div>
                 <div class="chat-input-area">
                     <input type="text" id="chatInput" placeholder="输入消息...">
-                    <label class="file-upload-btn" for="fileInput">
+                    <label class="file-upload-btn" for="fileInput" title="上传文件">
                         <i class="fas fa-paperclip"></i>
                         <input type="file" id="fileInput" style="display: none;">
                     </label>
-                    <button id="sendMessage">
+                    <button id="sendMessage" title="发送消息">
                         <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="control-bar">
-                <div class="participant-info">
-                    <span id="participantCount">参与者: 1</span>
-                </div>
-                <div class="control-buttons">
-                    <button class="control-btn" id="toggleAudio">
-                        <i class="fas fa-microphone"></i>
-                    </button>
-                    <button class="control-btn" id="toggleVideo">
-                        <i class="fas fa-video"></i>
-                    </button>
-                    <button class="control-btn" id="toggleScreen">
-                        <i class="fas fa-desktop"></i>
-                    </button>
-                    <button class="control-btn leave" id="leaveButton">
-                        <i class="fas fa-phone-slash"></i>
                     </button>
                 </div>
             </div>

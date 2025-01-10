@@ -287,6 +287,26 @@ async function handleFileUpload(file) {
     }
 }
 
+// 在视频容器中添加用户名标签
+function addUserNameLabel(container, userName) {
+    const nameLabel = document.createElement('div');
+    nameLabel.className = 'user-name';
+    nameLabel.innerHTML = `
+        <i class="fas fa-user"></i>
+        <span>${userName}</span>
+    `;
+    container.appendChild(nameLabel);
+}
+
+// 创建视频容器
+function createVideoContainer(uid, userName) {
+    const container = document.createElement('div');
+    container.className = 'video-container';
+    container.id = `video-${uid}`;
+    addUserNameLabel(container, userName || `用户 ${uid}`);
+    return container;
+}
+
 // 当页面加载完成时初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[App] 页面加载完成，初始化应用');
