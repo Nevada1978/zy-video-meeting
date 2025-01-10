@@ -58,8 +58,8 @@
 
 #### 克隆项目
 ```bash
-git clone [项目地址]
-cd tengcent-chat
+git clone https://github.com/Nevada1978/zy-video-meeting.git
+cd zy-video-meeting
 ```
 
 #### 安装依赖
