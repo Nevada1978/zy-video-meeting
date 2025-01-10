@@ -109,7 +109,7 @@ npm start
    - 这个 ID 是临时的，需要从Agora 控制台中创建应用，获取 appId 和 token
    - 把这个appId 和 token 填入到 frontend/src/js/agoraManager.js 中
 2. 点击"加入会议"按钮
-
+3. 默认的会议ID是：`123456`
 #### 基本操作
 - 🎤 点击麦克风图标：开启/关闭音频
 - 📹 点击摄像头图标：开启/关闭视频
@@ -137,3 +137,104 @@ npm start
 #### 证书问题
 - 首次访问时接受自签名证书
 - 如果证书过期，重新生成证书
+
+## 项目结构
+
+```
+tengcent-chat/
+├── backend/                 # 后端项目目录
+│   ├── src/                # 源代码目录
+│   │   ├── server.js       # 主服务器文件，处理HTTP和WebSocket请求
+│   │   └── generateCert.js # 生成SSL证书的脚本
+│   ├── cert/               # SSL证书目录
+│   │   ├── key.pem         # SSL私钥
+│   │   └── cert.pem        # SSL证书
+│   ├── uploads/            # 文件上传存储目录
+│   ├── package.json        # 后端依赖配置
+│   └── package-lock.json   # 后端依赖版本锁定
+│
+├── frontend/               # 前端项目目录
+│   ├── public/            # 公共资源目录
+│   │   └── index.html     # 主页面HTML
+│   └── src/               # 源代码目录
+│       ├── css/           # 样式文件目录
+│       │   └── styles.css # 全局样式文件
+│       └── js/            # JavaScript源码目录
+│           ├── main.js           # 主程序入口
+│           ├── agoraManager.js   # Agora SDK管理模块
+│           └── uiManager.js      # UI交互管理模块
+│
+└── README.md              # 项目说明文档
+
+```
+
+### 文件说明
+
+#### 后端文件
+- `server.js`: 
+  - Express服务器配置
+  - WebSocket服务器实现
+  - 文件上传下载处理
+  - 静态文件服务
+  - HTTPS配置
+
+- `generateCert.js`: 
+  - 生成自签名SSL证书
+  - 用于HTTPS服务器
+  - 本地开发环境配置
+
+#### 前端文件
+- `index.html`: 
+  - 主页面结构
+  - 视频会议界面
+  - 聊天界面
+  - 文件共享界面
+
+- `styles.css`:
+  - 全局样式定义
+  - 响应式布局
+  - 深色主题
+  - 动画效果
+
+- `main.js`:
+  - 应用程序入口
+  - WebSocket客户端
+  - 事件处理
+  - 文件上传下载
+
+- `agoraManager.js`:
+  - Agora SDK初始化
+  - 视频流处理
+  - 音频控制
+  - 屏幕共享
+
+- `uiManager.js`:
+  - UI状态管理
+  - 界面更新
+  - 事件绑定
+  - 交互处理
+
+#### 配置文件
+- `package.json`: 
+  - 项目依赖
+  - 启动脚本
+  - 项目信息
+
+#### 资源目录
+- `cert/`: SSL证书存储
+- `uploads/`: 上传文件存储
+- `public/`: 静态资源托管
+
+### 目录职责
+
+#### backend/
+- 提供HTTPS服务
+- 处理WebSocket连接
+- 管理文件上传下载
+- 实现实时通信
+
+#### frontend/
+- 实现用户界面
+- 处理视频会议
+- 管理实时聊天
+- 处理文件共享
