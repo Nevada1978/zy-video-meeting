@@ -107,7 +107,7 @@ class App {
                 console.log('[App] 成功加入频道');
                 this.loginPage.style.display = 'none';
                 this.meetingPage.style.display = 'flex';
-                
+
                 // 更新按钮初始状态
                 uiManager.updateAudioIcon(true);
                 uiManager.updateVideoIcon(true);
@@ -128,7 +128,7 @@ class App {
             // 先离开频道
             await agoraManager.leaveChannel();
             console.log('[App] 成功离开频道');
-            
+
             // 重置 UI 状态
             uiManager.resetUI();
         } catch (error) {
@@ -140,8 +140,197 @@ class App {
     }
 }
 
+// WebSocket连接
+let ws;
+let currentUser = '';
+let currentChannel = '';
+
+// 初始化WebSocket连接
+function initWebSocket() {
+    ws = new WebSocket('wss://' + window.location.hostname + ':3000');
+
+    ws.onopen = () => {
+        console.log('WebSocket连接已建立');
+        // 发送加入消息
+        ws.send(JSON.stringify({
+            type: 'join',
+            name: currentUser,
+            channel: currentChannel
+        }));
+    };
+
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === 'chat') {
+            appendMessage(data);
+        } else if (data.type === 'file') {
+            appendFile(data);
+        }
+    };
+
+    ws.onclose = () => {
+        console.log('WebSocket连接已关闭');
+        // 可以在这里添加重连逻辑
+    };
+}
+
+// 添加消息到聊天区域
+function appendMessage(message) {
+    const chatMessages = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message';
+
+    const time = new Date(message.time).toLocaleTimeString();
+
+    messageDiv.innerHTML = `
+        <div class="sender">${message.sender}</div>
+        <div class="content">${message.content}</div>
+        <div class="time">${time}</div>
+    `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// 发送消息
+function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const content = input.value.trim();
+
+    if (content && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'chat',
+            content: content
+        }));
+        input.value = '';
+    }
+}
+
+// 添加文件到文件列表
+function appendFile(fileInfo) {
+    const fileList = document.getElementById('fileList');
+    const fileItem = document.createElement('div');
+    fileItem.className = 'file-item';
+
+    const size = (fileInfo.size / 1024).toFixed(2) + ' KB';
+    const time = new Date(fileInfo.time).toLocaleTimeString();
+
+    fileItem.innerHTML = `
+        <div class="file-name">
+            ${fileInfo.originalname}
+            <span class="file-info">${size} - 上传者: ${fileInfo.uploader} - ${time}</span>
+        </div>
+        <button class="download-btn" onclick="downloadFile('${fileInfo.filename}', '${fileInfo.originalname}')">
+            <i class="fas fa-download"></i>
+        </button>
+    `;
+
+    fileList.appendChild(fileItem);
+    fileList.scrollTop = fileList.scrollHeight;
+}
+
+// 下载文件
+async function downloadFile(filename, originalname) {
+    try {
+        const response = await fetch('/download/' + encodeURIComponent(filename));
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '文件下载失败');
+        }
+
+        // 获取文件blob
+        const blob = await response.blob();
+
+        // 创建下载链接
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = originalname;
+        document.body.appendChild(a);
+        a.click();
+
+        // 清理
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    } catch (error) {
+        console.error('下载错误:', error);
+        alert(error.message || '文件下载失败，请重试');
+    }
+}
+
+// 处理文件上传
+async function handleFileUpload(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const response = await fetch('/upload', {
+            method: 'POST',
+            headers: {
+                'X-Channel': currentChannel,
+                'X-Username': currentUser
+            },
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '文件上传失败');
+        }
+
+        const result = await response.json();
+        console.log('文件上传成功:', result);
+    } catch (error) {
+        console.error('文件上传错误:', error);
+        alert(error.message || '文件上传失败，请重试');
+    }
+}
+
 // 当页面加载完成时初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[App] 页面加载完成，初始化应用');
     window.app = new App();
+
+    // 获取发送按钮和输入框
+    const sendButton = document.getElementById('sendMessage');
+    const chatInput = document.getElementById('chatInput');
+    const fileInput = document.getElementById('fileInput');
+
+    // 点击发送按钮发送消息
+    sendButton.addEventListener('click', sendMessage);
+
+    // 在输入框中按回车键发送消息
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // 处理文件选择
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            handleFileUpload(file);
+            // 清空文件输入框，允许上传相同的文件
+            fileInput.value = '';
+        }
+    });
+
+    // 修改加入会议按钮的处理函数
+    document.getElementById('joinButton').addEventListener('click', () => {
+        currentChannel = document.getElementById('channelInput').value;
+        currentUser = document.getElementById('nameInput').value;
+
+        if (currentChannel && currentUser) {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('meetingPage').style.display = 'flex';
+
+            // 初始化WebSocket连接
+            initWebSocket();
+        }
+    });
 });
+
+// 使 downloadFile 函数全局可用
+window.downloadFile = downloadFile;

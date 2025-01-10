@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="/static/css/styles.css">
     <script src="https://download.agora.io/sdk/release/AgoraRTC_N.js"></script>
 </head>
+
 <body>
     <div class="page">
         <div class="login-container" id="loginPage">
@@ -23,6 +25,24 @@
 
         <div class="meeting-container" id="meetingPage" style="display: none;">
             <div id="videoGrid" class="video-grid"></div>
+            <div class="chat-container">
+                <div class="chat-messages" id="chatMessages">
+                    <!-- 消息将在这里动态添加 -->
+                </div>
+                <div class="file-list" id="fileList">
+                    <!-- 文件列表将在这里显示 -->
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="输入消息...">
+                    <label class="file-upload-btn" for="fileInput">
+                        <i class="fas fa-paperclip"></i>
+                        <input type="file" id="fileInput" style="display: none;">
+                    </label>
+                    <button id="sendMessage">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
             <div class="control-bar">
                 <div class="participant-info">
                     <span id="participantCount">参与者: 1</span>
@@ -47,4 +67,5 @@
 
     <script type="module" src="/static/js/main.js"></script>
 </body>
+
 </html>
